@@ -63,18 +63,21 @@ class InterviewStartRequest(BaseModel):
 # Routes
 @app.get("/")
 async def root():
-    """Serve frontend index.html or API status"""
-    # Try to serve frontend for web access
+    """Serve frontend index.html"""
+    # First try templates directory
+    template_path = Path(__file__).parent / "templates" / "index.html"
+    if template_path.exists():
+        return FileResponse(template_path)
+    
+    # Fallback to dist directory
     try:
-        frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+        frontend_dist = Path(__file__).parent.parent / "frontend" / "dist" / "index.html"
         if frontend_dist.exists():
-            index_file = frontend_dist / "index.html"
-            if index_file.exists():
-                return FileResponse(index_file)
+            return FileResponse(frontend_dist)
     except:
         pass
     
-    # Return API status if frontend not available
+    # Return API status if frontend not found
     return {
         "status": "AURA Backend Active",
         "version": "2.0",
@@ -276,15 +279,16 @@ async def delete_session(session_id: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# Mount static files (frontend) - MUST be after all API routes
-# Try development path first
-frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
-if not frontend_dist.exists():
-    # Try Docker path
-    frontend_dist = Path("/app/frontend/dist")
-
-if frontend_dist.exists():
-    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")
+# Mount static files (frontend assets)
+# Try templates/static directory first (Render deployment)
+static_path = Path(__file__).parent / "static"
+if static_path.exists():
+    app.mount("/", StaticFiles(directory=str(static_path), html=True), name="static")
+else:
+    # Fallback to dist directory (development)
+    frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+    if frontend_dist.exists():
+        app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

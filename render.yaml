@@ -3,7 +3,7 @@ services:
     name: aura-agent
     env: python
     runtime: python-3.13
-    buildCommand: npm install --prefix frontend && npm run build --prefix frontend
+    buildCommand: npm install --prefix frontend && npm run build --prefix frontend && cp frontend/dist/index.html backend/templates/ && cp -r frontend/dist/* backend/static/
     startCommand: python backend/main.py
     envVars:
       - key: ENVIRONMENT
@@ -15,6 +15,7 @@ services:
       - key: LLM_MODEL
         value: gemini-2.5-flash
     region: ohio
+
 
 
 
