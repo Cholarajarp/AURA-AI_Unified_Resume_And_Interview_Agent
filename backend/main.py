@@ -307,16 +307,17 @@ async def delete_session(session_id: str):
     return {"status": "success", "message": "Session deleted"}
 
 
-# Mount frontend static assets to /static so API endpoints are reachable at root (/)
-# If you previously copied build output into backend/static, this will serve assets at /static/*
-if STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+# Mount frontend static assets directly at root (/) to serve everything as-is
+# This serves /assets/*, /vite.svg, etc. exactly as they appear in the static directory
+# MUST be mounted AFTER all API routes so API endpoints take precedence
+if STATIC_DIR.exists() and list(STATIC_DIR.iterdir()):
+    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
 
 # Optionally mount frontend/dist for local dev if not copied into backend/static
 frontend_dist = (BASE_DIR.parent / "frontend" / "dist").resolve()
-if frontend_dist.exists() and frontend_dist.is_dir():
-    # serve development build under /static-dev (optional)
-    app.mount("/static-dev", StaticFiles(directory=str(frontend_dist)), name="static-dev")
+if frontend_dist.exists() and frontend_dist.is_dir() and not STATIC_DIR.exists():
+    # serve development build under root if backend/static is empty
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend-dist")
 
 
 # If running as script
