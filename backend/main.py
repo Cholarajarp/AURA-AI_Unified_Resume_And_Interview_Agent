@@ -5,6 +5,7 @@ import json
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from pathlib import Path
 from typing import List, Dict, Any
@@ -62,11 +63,25 @@ class InterviewStartRequest(BaseModel):
 # Routes
 @app.get("/")
 async def root():
+    """Serve frontend index.html"""
+    frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+    if frontend_dist.exists():
+        index_file = frontend_dist / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+    
+    # Fallback for Docker
+    frontend_dist_docker = Path("/app/frontend/dist")
+    if frontend_dist_docker.exists():
+        index_file = frontend_dist_docker / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+    
+    # Fallback response if frontend not found
     return {
         "status": "AURA Backend Active",
         "version": "2.0",
-        "mode": "REAL WORLD - GPT-4 TURBO",
-        "message": "System is in production mode - Real AI processing only"
+        "message": "Frontend not found - check Docker build"
     }
 
 @app.get("/health")
@@ -264,14 +279,14 @@ async def delete_session(session_id: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 # Mount static files (frontend) - MUST be after all API routes
+# Try development path first
 frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+if not frontend_dist.exists():
+    # Try Docker path
+    frontend_dist = Path("/app/frontend/dist")
+
 if frontend_dist.exists():
     app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")
-else:
-    # Fallback: try alternate path for Docker
-    frontend_dist_docker = Path("/app/frontend/dist")
-    if frontend_dist_docker.exists():
-        app.mount("/", StaticFiles(directory=str(frontend_dist_docker), html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
