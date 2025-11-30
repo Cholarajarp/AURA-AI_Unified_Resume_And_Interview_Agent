@@ -3,7 +3,10 @@ services:
     name: aura-agent
     env: python
     runtime: python-3.11
-    buildCommand: pip install -r backend/requirements.txt && cd frontend && npm install && npm run build
+    buildCommand: |
+      pip install -r backend/requirements.txt && \
+      cd frontend && npm install && npm run build && cd .. && \
+      echo "Build complete"
     startCommand: python backend/main.py
     envVars:
       - key: ENVIRONMENT
@@ -11,9 +14,9 @@ services:
       - key: PORT
         value: 8000
       - key: GOOGLE_API_KEY
-        scope: build
         value: ${GOOGLE_API_KEY}
       - key: LLM_MODEL
         value: gemini-2.5-flash
     region: ohio
+
 
