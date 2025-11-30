@@ -21,7 +21,7 @@ load_dotenv()
 
 # Get configuration from environment
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
-PORT = int(os.getenv("PORT", os.getenv("PORT", 8000)))
+PORT = int(os.getenv("PORT", 8000))
 HOST = os.getenv("HOST", "0.0.0.0")
 
 app = FastAPI(title="AURA Backend - AI Unified Resume & Interview Agent")
