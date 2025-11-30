@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: aura-agent
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: ohio
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: GOOGLE_API_KEY
+        scope: build
+        value: ${GOOGLE_API_KEY}
+      - key: LLM_MODEL
+        value: gemini-2.5-flash
+    diskSize: 1
+    numInstances: 1
