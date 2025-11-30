@@ -63,25 +63,23 @@ class InterviewStartRequest(BaseModel):
 # Routes
 @app.get("/")
 async def root():
-    """Serve frontend index.html"""
-    frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
-    if frontend_dist.exists():
-        index_file = frontend_dist / "index.html"
-        if index_file.exists():
-            return FileResponse(index_file)
+    """Serve frontend index.html or API status"""
+    # Try to serve frontend for web access
+    try:
+        frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+        if frontend_dist.exists():
+            index_file = frontend_dist / "index.html"
+            if index_file.exists():
+                return FileResponse(index_file)
+    except:
+        pass
     
-    # Fallback for Docker
-    frontend_dist_docker = Path("/app/frontend/dist")
-    if frontend_dist_docker.exists():
-        index_file = frontend_dist_docker / "index.html"
-        if index_file.exists():
-            return FileResponse(index_file)
-    
-    # Fallback response if frontend not found
+    # Return API status if frontend not available
     return {
         "status": "AURA Backend Active",
         "version": "2.0",
-        "message": "Frontend not found - check Docker build"
+        "mode": "Production",
+        "message": "API is running"
     }
 
 @app.get("/health")

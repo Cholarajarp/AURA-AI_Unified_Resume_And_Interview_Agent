@@ -1,17 +1,19 @@
 services:
   - type: web
     name: aura-agent
-    env: docker
-    dockerfilePath: ./Dockerfile
-    plan: free
-    region: ohio
+    env: python
+    runtime: python-3.11
+    buildCommand: pip install -r backend/requirements.txt && cd frontend && npm install && npm run build
+    startCommand: python backend/main.py
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: PORT
+        value: 8000
       - key: GOOGLE_API_KEY
         scope: build
         value: ${GOOGLE_API_KEY}
       - key: LLM_MODEL
         value: gemini-2.5-flash
-    diskSize: 1
-    numInstances: 1
+    region: ohio
+
